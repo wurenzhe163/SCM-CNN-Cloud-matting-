@@ -6,8 +6,6 @@ Time:2022/3/2 9:46
 Author:WRZ
 """
 # %%
-import sys
-sys.path.append("..")
 import Resnet,u2net,DataseatIO,Log_weights
 from loss import losses, LearningRate, Ms_ssim
 from tqdm import tqdm
@@ -18,11 +16,32 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import numpy as np
-
+import argparse
 import warnings
 warnings.filterwarnings("ignore")
+# %% Argse
+def get_args():
+    # Training settings
+    parser = argparse.ArgumentParser(description='SCM-CNN,A Cloud Matting and Cloud Removal Method!')
+    parser.add_argument('--trainDir', default='data/train_dataset', help='train dataset directory')
+    parser.add_argument('--testDir', default='data/test_dataset', help='test dataset directory')
+    parser.add_argument('--saveDir', default='./modelSave', help='model save dir')
+    parser.add_argument('--ckpt', default=False, help='Ckpt path')
+    parser.add_argument('--nEpochs', type=int, default=300, help='number of epochs to train')
+    parser.add_argument('--startEpoch', type=int, default=1, help='start epoch to train')
+    parser.add_argument('--save_epoch', type=int, default=20, help='number of epochs to save model')
+    parser.add_argument('--nThreads', type=int, default=4, help='number of threads for data loading')
+    parser.add_argument('--batchSize', type=int, default=4, help='input batch size for train')
+    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
+    parser.add_argument('--lrDecay', type=int, default=5,  help='learning rate')
+    parser.add_argument('--lrdecayType', default='poly')
+    parser.add_argument('--train_phase', default= 'U2NET', help='train phase U2NET or RESNET50')
+    parser.add_argument("--port", default=52162)
+    args = parser.parse_args()
+    print(args)
+    return args
 
-# %%
+# %%Loss function
 def loss_function(trainimg, origin_img, alpha_gt, alpha_pre, cloudMaxDN, cloudMaxDN_pre):
     loss = 0
     M = Ms_ssim.MS_SSIM(data_range=1,
@@ -55,10 +74,7 @@ def loss_function(trainimg, origin_img, alpha_gt, alpha_pre, cloudMaxDN, cloudMa
 
     return loss, L_alpha, 2.0 * L_DN, Loss_compose * 5
 
-
-# Train_model
-
-# %%
+# %%Train_model
 class trainModel(object):
     def __init__(self, train_phase, lr,
                  train_dir, test_dir, saveDir, batch,
@@ -281,26 +297,32 @@ class trainModel(object):
                     self.model, epoch, self.lr, train_loss=False, val_loss=False)
 
 
-# %%
-batch = 1
-nThreads = 0
-train_dir = r'E:\test'
-test_dir = r'E:\test'
-lr = 0.01
-saveDir = r'D:\缓存文件\tes'
-train_epoch = 200
-lrdecayType = 'poly'
-lrDecay = 2
-save_epoch = 20
-train_phase = 'RESNET50'  # 'U2NET'  'RESNET50'
-start_epoch = 1
+
 
 # %%
+if __name__ == '__main__':
 
-Model = trainModel(train_phase, lr, train_dir, test_dir, saveDir,
-                   batch, nThreads, lrdecayType, start_epoch, train_epoch, save_epoch,
-                   finetuning=False)
+    args = get_args()
+    train_dir = args.trainDir
+    test_dir = args.testDir
+    saveDir = args.saveDir
+    ckpt = args.ckpt
+    train_epoch = args.nEpochs
+    start_epoch = args.startEpoch
+    save_epoch = args.save_epoch
+    batch = args.batchSize
+    nThreads = args.nThreads
+    lr = args.lr
+    lrDecay = args.lrDecay
+    lrdecayType = args.lrdecayType
+    train_phase = args.train_phase  # 'U2NET'  'RESNET50'
 
-print('train_datalen={},test_datalen={}'.format(
-    Model.train_data.__len__(), Model.test_data.__len__()))
-Model.execute(lrDecay=lrDecay)
+    Model = trainModel(train_phase, lr, train_dir, test_dir,
+                       saveDir,batch, nThreads, lrdecayType,
+                       start_epoch, train_epoch, save_epoch,
+                       finetuning=ckpt)
+
+    print('train_datalen={},test_datalen={}'.format(
+        Model.train_data.__len__(), Model.test_data.__len__()))
+
+    Model.execute(lrDecay=lrDecay)
