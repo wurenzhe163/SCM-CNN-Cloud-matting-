@@ -1,4 +1,4 @@
-<h1 align="center">SCM-CNN-Cloud-matting</h1>
+<h1 align="center">SCM-CNN: Cloud-matting and Cloud-removal</h1>
 
 ## 🔶Description:
 A method for thin cloud removal from a single image of Sentinel-2 was developed, which can effectively perform cloud segmentation and evaluate cloud thickness. We use the Image-Matting method to de-cloud and enhance remote sensing images.
