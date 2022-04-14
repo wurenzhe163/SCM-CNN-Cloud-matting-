@@ -15,13 +15,13 @@ A method for thin cloud removal from a single image of Sentinel-2 was developed,
 <div align="center"><img src="./readme_imgs/fig3.jpg" width="600" height=""></div>
 
 
-## How to use？
-### Train
+# How to use？
+## Train
 ```shell
 python train.py --trainDir ./data/train_dataset --testDir ./data/test_dataset --saveDir ./modelSave
 ```
 **For more details please refer to` train.get_args()`** 😲
-### Prediction
+## Prediction
 If you want to infer an entire remote sensing image use (large image):
 ```shell
 python modelpre --Image_path "Image path" --ckpt "ckpt path" --saveDir "Save path" 
